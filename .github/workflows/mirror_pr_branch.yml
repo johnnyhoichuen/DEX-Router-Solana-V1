@@ -1,0 +1,31 @@
+name: Mirror PR head into repo branch
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR HEAD
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create/update mirror branch
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          BRANCH="mirror/pr-${PR_NUMBER}"
+          git checkout -B "$BRANCH"
+          git push --force --set-upstream origin "$BRANCH"
+
